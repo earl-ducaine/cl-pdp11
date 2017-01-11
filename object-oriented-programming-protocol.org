@@ -1,0 +1,43 @@
+* The Object Oriented Programming Protocol
+
+
+  Several decades ago a fascinating book came out called the The Art
+  of the Meta Object protocal.  In it the authors attempted to
+  consolidate and distill their experience of designing and
+  implementing CLOS, the Common Lisp Object System.  The Meta Object
+  Protocol is the small kernel of Lisp functionality needed to
+  implement CLOS, by exposing this kernel one can add additional
+  features to CLOS, such as persistance, or create a object system
+  with different characteristics.
+
+  The Book itself is an extrodinary achievement interms of programming
+  exposition, but it suffers from the fact that the reader need to
+  already have a fair degree of proficiency, or at least familiarity
+  with CLOS and to be a relatively mature Lisp programmer: it was a
+  spell book for wizards not a pot boiler popular book on the occult.
+
+  But, in fact Lisp's MOP (Meta Object Protacol) is simpler and more
+  transparent than CLOS and stimulates, in myself at least, thinking
+  about the real benefits of object oriented programming, which are
+  the management of complexity and in particular fascilitating
+  collaboration in huge, fluid software systems. In short MOP should
+  be your introduction not just to the CLOS system, but to object
+  oriented programming in general.  In that spirit, I'm hoping to help
+  the ambitious to suspend their knowlege of OOP for a moment and
+  pretend they are setting out on a self directed study course to
+  learn OOP using the underlying primitives of the technology itself.
+
+  For instructional purposes, we'll use the time honored technique of
+  the sample project.  Unlike most books that use that technique,
+  however, we won't use a toy ablication but an already functioning
+  real world applicaiton.  Our example is a pdp-11 emulator writen in
+  Javascript.  Our goal is to create a developer laboritory that
+  fascilites running the emulater, troubleshooting it and ultimatels
+  porting it to Common Lisp.
+
+
+
+
+
+
+

@@ -41,7 +41,7 @@ rkready()
 
 function
 rkerror(code)
-{	
+{
 	var msg;
 	rkready();
 	RKER |= code;
@@ -143,19 +143,65 @@ rkreset()
 	RKDB = 0;
 }
 
-function
-rkinit()
-{
-	var req, buf, i;
-	req = new XMLHttpRequest();
-	req.open('GET', 'http://pdp11.aiju.de/rk0', false);
-	req.overrideMimeType('text/plain; charset=x-user-defined');
-	req.send(null);
-	if(req.status != 200) panic("could not load disk image");
-	buf = req.responseText;
-	if(buf.length != imglen) panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+
+function rkinit() {
+    var req, buf, i;
+    req = new XMLHttpRequest();
+    req.open('GET', 'rk0', false);
+    req.overrideMimeType('text/plain; charset=x-user-defined');
+    req.send(null);
+    if(req.status != 200) {
+	panic("could not load disk image");
+    }
+    buf = req.responseText;
+    if(buf.length != imglen) {
+	panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+    }
+    rkdisk = new Array(buf.length);
+    for(i=0;i<buf.length;i++) {
+	rkdisk[i] = buf.charCodeAt(i) & 0xFF;
+    }
+}
+
+function rkinit_alt() {
+    var req, buf, i;
+    fs = require('fs')
+    fs.readFile('./rk0', 'binary', function (err, buf) {
+	if(buf.length != imglen) {
+	    console.log("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+	}
 	rkdisk = new Array(buf.length);
 	for(i=0;i<buf.length;i++) {
-		rkdisk[i] = buf.charCodeAt(i) & 0xFF;
+	    rkdisk[i] = buf.charCodeAt(i) & 0xFF;
 	}
+	console.log("Initialization complete.");
+    });
 }
+
+
+
+
+module.exports = {
+    rkinit: function() {
+	rkinit_alt();
+    }
+};
+
+
+// run_alt();
+// function
+// rkinit_bak()
+// {
+// 	var req, buf, i;
+// 	req = new XMLHttpRequest();
+// 	req.open('GET', 'http://pdp11.aiju.de/rk0', false);
+// 	req.overrideMimeType('text/plain; charset=x-user-defined');
+// 	req.send(null);
+// 	if(req.status != 200) panic("could not load disk image");
+// 	buf = req.responseText;
+// 	if(buf.length != imglen) panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+// 	rkdisk = new Array(buf.length);
+// 	for(i=0;i<buf.length;i++) {
+// 		rkdisk[i] = buf.charCodeAt(i) & 0xFF;
+// 	}
+// }

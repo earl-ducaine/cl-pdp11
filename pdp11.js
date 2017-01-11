@@ -1,3 +1,6 @@
+var rk05 = require('./rk05.js');
+
+
 var FLAGN = 8;
 var FLAGZ = 4;
 var FLAGV = 2;
@@ -1017,9 +1020,34 @@ function run() {
 	tim2 = setInterval('document.getElementById("ips").innerHTML = ips; ips = 0;', 1000);
 }
 
+
+function run_alt() {
+    if(tim1 == undefined) {
+	tim1 = setInterval(function () {
+	    nsteps(4000);
+	}, 1);
+    }
+    if(tim2 == undefined) {
+	tim2 = setInterval(function () {
+	    console.log(ips);
+	    ips = 0;
+	}, 1000);
+    }
+}
+
 function stop() {
     document.getElementById("ips").innerHTML = '';
     clearInterval(tim1);
     clearInterval(tim2);
     tim1 = tim2 = undefined;
 }
+
+
+function ips_setter () {
+    document.getElementById("ips").innerHTML = ips;
+    ips = 0;
+}
+
+
+rk05.rkinit();
+run_alt();
