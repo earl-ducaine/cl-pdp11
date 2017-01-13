@@ -94,3 +94,11 @@ conswrite16(a,v)
 		panic("write to invalid address " + ostr(a,6));
 	}
 }
+
+
+
+module.exports = {
+    clearterminal: function() {
+	clearterminal();
+    }
+};

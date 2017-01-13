@@ -1,4 +1,5 @@
-var rk05 = require('./rk05.js');
+var rk05 = require('rk05');
+var cons = require('cons');
 
 
 var FLAGN = 8;
@@ -94,7 +95,7 @@ physread16(a)
     if(a == 0777576) return SR2;
     if(a == 0777776) return PS;
     if((a & 0777770) == 0777560) return consread16(a);
-    if((a & 0777760) == 0777400) return rkread16(a);
+    if((a & 0777760) == 0777400) return rk05.rkread16(a);
     if((a & 0777600) == 0772200 || (a & 0777600) == 0777600) return mmuread16(a);
     if(a == 0776000) panic("lolwut");
     throw Trap(INTBUS, "read from invalid address " + ostr(a,6));
@@ -150,7 +151,7 @@ physwrite16(a,v)
     else if(a == 0777546) LKS = v;
     else if(a == 0777572) SR0 = v;
     else if((a & 0777770) == 0777560) conswrite16(a,v);
-    else if((a & 0777700) == 0777400) rkwrite16(a,v);
+    else if((a & 0777700) == 0777400) rk05.rkwrite16(a,v);
     else if((a & 0777600) == 0772200 || (a & 0777600) == 0777600) mmuwrite16(a,v);
     else throw Trap(INTBUS, "write to invalid address " + ostr(a,6));
 }
@@ -956,8 +957,8 @@ function step() {
 	return;
     case 0000005: // RESET
 	if(curuser) return;
-	clearterminal();
-	rkreset();
+	cons.clearterminal();
+	rk05.rkreset();
 	return;
     case 0170011: // SETD ; not needed by UNIX, but used; therefore ignored
 	return;
@@ -983,8 +984,8 @@ function reset() {
     for(i=0;i<16;i++) pages[i] = createpage(0, 0);
     R[7] = 02002;
     cleardebug();
-    clearterminal();
-    rkreset();
+    cons.clearterminal();
+    rk05.rkreset();
     clkcounter = 0;
     waiting = false;
 }
@@ -1015,7 +1016,9 @@ function nsteps(n) {
 
 function run() {
     if(tim1 == undefined)
-	tim1 = setInterval('nsteps(4000);', 1);
+	tim1 = setInterval(function () {
+	    nsteps(4000);
+	}, 1);
     if(tim2 == undefined)
 	tim2 = setInterval('document.getElementById("ips").innerHTML = ips; ips = 0;', 1000);
 }
@@ -1049,5 +1052,18 @@ function ips_setter () {
 }
 
 
-rk05.rkinit();
-run_alt();
+
+module.exports = {
+    panic: function() {
+	panic();
+    },
+    reset: function() {
+	reset();
+    },
+    stop: function() {
+	stop();
+    },
+    run: function() {
+	run();
+    }
+};

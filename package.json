@@ -1,0 +1,29 @@
+{
+  "name": "js-pdp11",
+  "version": "1.0.0",
+  "description": "pdp-11 emulator",
+  "main": "pdp11.js",
+  "dependencies": {
+      "browserify": "^13.3.0",
+      "browserify": "^13.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "nodejs run_tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/earl-ducaine/cl-pdp11.git"
+  },
+  "keywords": [
+    "pdp",
+    "emulator",
+    "javascript"
+  ],
+  "author": "earl ducaine",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/earl-ducaine/cl-pdp11/issues"
+  },
+  "homepage": "https://github.com/earl-ducaine/cl-pdp11#readme"
+}

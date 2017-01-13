@@ -116,3 +116,10 @@ disasm(a)
 	}
 	return msg;
 }
+
+
+module.exports = {
+    rkinit: function() {
+	rkinit();
+    }
+};

@@ -1,3 +1,5 @@
+var pdp11 = require('pdp11');
+
 var RKDS, RKER, RKCS, RKWC, RKBA, drive, sector, surface, cylinder, rkimg;
 
 var imglen = 2077696;
@@ -20,7 +22,7 @@ rkread16(a)
 	case 0777410: return RKBA & 0xFFFF;
 	case 0777412: return (sector) | (surface << 4) | (cylinder << 5) | (drive << 13);
 	}
-	panic("invalid read");
+	pdp11.panic("invalid read");
 }
 
 function
@@ -52,7 +54,7 @@ rkerror(code)
 	case RKNXC: msg = "invalid cylinder accessed"; break;
 	case RKNXS: msg = "invalid sector accessed"; break;
 	}
-	panic(msg);
+	pdp11.panic(msg);
 }
 
 function
@@ -102,7 +104,7 @@ rkgo()
 	case 0: rkreset(); break;
 	case 1: rknotready(); setTimeout('rkrwsec(true)', 3); break;
 	case 2: rknotready(); setTimeout('rkrwsec(false)', 3); break;
-	default: panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
+	default: pdp11.panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
 	}
 }
 
@@ -128,7 +130,7 @@ rkwrite16(a,v)
 		sector = v & 15;
 		break;
 	default:
-		panic("invalid write");
+		pdp11.panic("invalid write");
 	}
 }
 
@@ -151,11 +153,11 @@ function rkinit() {
     req.overrideMimeType('text/plain; charset=x-user-defined');
     req.send(null);
     if(req.status != 200) {
-	panic("could not load disk image");
+	pdp11.panic("could not load disk image");
     }
     buf = req.responseText;
     if(buf.length != imglen) {
-	panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+	pdp11.panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
     }
     rkdisk = new Array(buf.length);
     for(i=0;i<buf.length;i++) {
@@ -179,14 +181,23 @@ function rkinit_alt() {
 }
 
 
-
-
 module.exports = {
     rkinit: function() {
-	rkinit_alt();
+	return rkinit();
+    },
+    rkrwsec: function() {
+	return rkrwsec();
+    },
+    rkread16: function() {
+	return rkread16();
+    },
+    rkreset: function() {
+	return rkreset();
+    },
+    rkwrite16: function(a,v) {
+	return rkwrite16(a,v);
     }
 };
-
 
 // run_alt();
 // function
