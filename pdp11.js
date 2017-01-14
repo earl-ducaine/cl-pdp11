@@ -376,9 +376,7 @@ rkwrite16(a,v)
 	}
 }
 
-function
-rkreset()
-{
+function rkreset(browser_mode) {
 	RKDS = (1 << 11) | (1 << 7) | (1 << 6);
 	RKER = 0;
 	RKCS = 1 << 7;
@@ -387,9 +385,7 @@ rkreset()
 	RKDB = 0;
 }
 
-function
-rkinit()
-{
+function rkinit(browser_mode) {
     var req, buf, i;
     req = new XMLHttpRequest();
     //req.open('GET', 'http://pdp11.aiju.de/rk0', false);
