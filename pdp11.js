@@ -1,3 +1,423 @@
+// ****************************** START: disasm.js ******************************
+
+
+var rs = ["R0", "R1", "R2", "R3", "R4", "R5", "SP", "PC"];
+var disasmtable = [
+	[0077700, 0005000, "CLR", "D", true],
+	[0077700, 0005100, "COM", "D", true],
+	[0077700, 0005200, "INC", "D", true],
+	[0077700, 0005300, "DEC", "D", true],
+	[0077700, 0005400, "NEG", "D", true],
+	[0077700, 0005700, "TST", "D", true],
+	[0077700, 0006200, "ASR", "D", true],
+	[0077700, 0006300, "ASL", "D", true],
+	[0077700, 0006000, "ROR", "D", true],
+	[0077700, 0006100, "ROL", "D", true],
+	[0177700, 0000300, "SWAB", "D", false],
+	[0077700, 0005500, "ADC", "D", true],
+	[0077700, 0005600, "SBC", "D", true],
+	[0177700, 0006700, "SXT", "D", false],
+	[0070000, 0010000, "MOV", "SD", true],
+	[0070000, 0020000, "CMP", "SD", true],
+	[0170000, 0060000, "ADD", "SD", false],
+	[0170000, 0160000, "SUB", "SD", false],
+	[0070000, 0030000, "BIT", "SD", true],
+	[0070000, 0040000, "BIC", "SD", true],
+	[0070000, 0050000, "BIS", "SD", true],
+	[0177000, 0070000, "MUL", "RD", false],
+	[0177000, 0071000, "DIV", "RD", false],
+	[0177000, 0072000, "ASH", "RD", false],
+	[0177000, 0073000, "ASHC", "RD", false],
+	[0177400, 0000400, "BR", "O", false],
+	[0177400, 0001000, "BNE", "O", false],
+	[0177400, 0001400, "BEQ", "O", false],
+	[0177400, 0100000, "BPL", "O", false],
+	[0177400, 0100400, "BMI", "O", false],
+	[0177400, 0101000, "BHI", "O", false],
+	[0177400, 0101400, "BLOS", "O", false],
+	[0177400, 0102000, "BVC", "O", false],
+	[0177400, 0102400, "BVS", "O", false],
+	[0177400, 0103000, "BCC", "O", false],
+	[0177400, 0103400, "BCS", "O", false],
+	[0177400, 0002000, "BGE", "O", false],
+	[0177400, 0002400, "BLT", "O", false],
+	[0177400, 0003000, "BGT", "O", false],
+	[0177400, 0003400, "BLE", "O", false],
+	[0177700, 0000100, "JMP", "D", false],
+	[0177000, 0004000, "JSR", "RD", false],
+	[0177770, 0000200, "RTS", "R", false],
+	[0177777, 0006400, "MARK", "", false],
+	[0177000, 0077000, "SOB", "RO", false],
+	[0177777, 0000005, "RESET", "", false],
+	[0177700, 0006500, "MFPI", "D", false],
+	[0177700, 0006600, "MTPI", "D", false],
+	[0177777, 0000001, "WAIT", "", false],
+	[0177777, 0000002, "RTI", "", false],
+	[0177777, 0000006, "RTT", "", false],
+	[0177400, 0104000, "EMT", "N", false],
+	[0177400, 0104400, "TRAP", "N", false],
+	[0177777, 0000003, "BPT", "", false],
+	[0177777, 0000004, "IOT", "", false]
+];
+
+function
+disasmaddr(m,a)
+{
+	if((m & 7) == 7) {
+		switch(m) {
+		case 027: a[0]+=2;return "$" + memory[a[0]>>1].toString(8);
+		case 037: a[0]+=2;return "*" + memory[a[0]>>1].toString(8);
+		case 067: a[0]+=2;return "*" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
+		case 077: a[0]+=2;return "**" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
+		}
+	}
+	r = rs[m & 7];
+	switch(m & 070) {
+	case 000: return r;
+	case 010: return "(" + r + ")";
+	case 020: return "(" + r + ")+";
+	case 030: return "*(" + r + ")+";
+	case 040: return "-(" + r + ")";
+	case 050: return "*-(" + r + ")";
+	case 060: a[0]+=2;return memory[a[0]>>1].toString(8) + "(" + r + ")";
+	case 070: a[0]+=2;return "*" + memory[a[0]>>1].toString(8) + "(" + r + ")";
+	}
+}
+
+function
+disasm(a)
+{
+	var i, ins, l, msg, s, d;
+	ins = memory[a>>1];
+	for(i=0;i<disasmtable.length;i++) {
+		l = disasmtable[i];
+		if((ins & l[0]) == l[1]) {
+			msg = l[2];
+			break;
+		}
+	}
+	if(msg == undefined)
+		return "???";
+	if(l[4] && ins & 0100000) msg += "B";
+	s = (ins & 07700) >> 6;
+	d = ins & 077;
+	o = ins & 0377;
+	aa = [a];
+	switch(l[3]) {
+	case "SD": msg += " " + disasmaddr(s, aa) + ","; // fallthrough
+	case "D": msg += " " + disasmaddr(d, aa); break;
+	case "RO": msg += " " + rs[(ins & 0700) >> 6] + ","; o &= 077; // fallthrough
+	case "O":
+		if(o & 0x80) {
+			msg += " -" + (2*((0xFF ^ o) + 1)).toString(8);
+		} else {
+			msg += " +" + (2*o).toString(8);
+		} break;
+	case "RD": msg += " " + rs[(ins & 0700) >> 6] + ", " + disasmaddr(d, aa); break;
+	case "R": msg += " " + rs[ins & 7]; break;
+	case "R3": msg += " " + rs[(ins & 0700) >> 6]; break;
+	}
+	return msg;
+}
+
+// ****************************** END: disasm.js ******************************
+
+
+
+// ****************************** START: cons.js ******************************
+
+
+var TKS, TPS, keybuf = 0;
+
+function
+clearterminal()
+{
+	var len = document.getElementById("terminal").firstChild.nodeValue.length;
+	document.getElementById("terminal").firstChild.deleteData(0, len);
+	TKS = 0;
+	TPS = 1<<7;
+}
+
+function
+writeterminal(msg)
+{
+	var ta = document.getElementById("terminal");
+	ta.firstChild.appendData(msg);
+	ta.scrollTop = ta.scrollHeight;
+}
+
+function
+addchar(c)
+{
+	TKS |= 0x80;
+	keybuf = c;
+	if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
+}
+
+function
+specialchar(c)
+{
+	switch(c) {
+	case 42: keybuf = 4; break;
+	case 19: keybuf = 034; break;
+	case 46: keybuf = 127; break;
+	default: return;
+	}
+	TKS |= 0x80;
+	if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
+}
+
+function
+getchar()
+{
+	if(TKS & 0x80) {
+		TKS &= 0xff7e;
+		return keybuf;
+	}
+	return 0;
+}
+
+function
+consread16(a)
+{
+	switch(a) {
+	case 0777560: return TKS;
+	case 0777562: return getchar();
+	case 0777564: return TPS;
+	case 0777566: return 0;
+	}
+	panic("read from invalid address " + ostr(a,6));
+}
+
+function
+conswrite16(a,v)
+{
+	switch(a) {
+	case 0777560:
+		if(v & (1<<6))
+			TKS |= 1<<6;
+		else
+			TKS &= ~(1<<6);
+		break;
+	case 0777564:
+		if(v & (1<<6))
+			TPS |= 1<<6;
+		else
+			TPS &= ~(1<<6);
+		break;
+	case 0777566:
+		v &= 0xFF;
+		if(!(TPS & 0x80)) break;
+		switch(v) {
+		case 13: break;
+		default:
+			writeterminal(String.fromCharCode(v & 0x7F));
+		}
+		TPS &= 0xff7f;
+		if(TPS & (1<<6))
+		    setTimeout(function () {
+			TPS |= 0x80; interrupt(INTTTYOUT, 4);
+		    }, 1);
+		else
+		    setTimeout(function () {
+			TPS |= 0x80;
+		    }, 1);
+		break;
+	default:
+		panic("write to invalid address " + ostr(a,6));
+	}
+}
+
+
+// ****************************** END: cons.js ******************************
+
+
+
+// ****************************** START: rk05.js ******************************
+
+
+var RKDS, RKER, RKCS, RKWC, RKBA, drive, sector, surface, cylinder, rkimg;
+
+var imglen = 2077696;
+
+var
+    RKOVR = (1<<14),
+    RKNXD = (1<<7),
+    RKNXC = (1<<6),
+    RKNXS = (1<<5)
+   ;
+
+function
+rkread16(a)
+{
+	switch(a) {
+	case 0777400: return RKDS;
+	case 0777402: return RKER;
+	case 0777404: return RKCS | ((RKBA & 0x30000) >> 12);
+	case 0777406: return RKWC;
+	case 0777410: return RKBA & 0xFFFF;
+	case 0777412: return (sector) | (surface << 4) | (cylinder << 5) | (drive << 13);
+	}
+	panic("invalid read");
+}
+
+function
+rknotready()
+{
+	document.getElementById('rkbusy').style.display = '';
+	RKDS &= ~(1<<6);
+	RKCS &= ~(1<<7);
+}
+
+function
+rkready()
+{
+	document.getElementById('rkbusy').style.display = 'none';
+	RKDS |= 1<<6;
+	RKCS |= 1<<7;
+}
+
+function
+rkerror(code)
+{
+	var msg;
+	rkready();
+	RKER |= code;
+	RKCS |= (1<<15) | (1<<14);
+	switch(code) {
+	case RKOVR: msg = "operation overflowed the disk"; break;
+	case RKNXD: msg = "invalid disk accessed"; break;
+	case RKNXC: msg = "invalid cylinder accessed"; break;
+	case RKNXS: msg = "invalid sector accessed"; break;
+	}
+	panic(msg);
+}
+
+function
+rkrwsec(t)
+{
+	var pos;
+	if(drive != 0) rkerror(RKNXD);
+	if(cylinder > 0312) rkerror(RKNXC);
+	if(sector > 013) rkerror(RKNXS);
+	pos = (cylinder * 24 + surface * 12 + sector) * 512;
+	for(i=0;i<256 && RKWC;i++) {
+		if(t) {
+			var val;
+			val = memory[RKBA >> 1];
+			rkdisk[pos] = val & 0xFF;
+			rkdisk[pos+1] = (val >> 8) & 0xFF;
+		}
+		else
+			memory[RKBA >> 1] = rkdisk[pos] | (rkdisk[pos+1] << 8);
+		RKBA += 2;
+		pos += 2;
+		RKWC = (RKWC + 1) & 0xFFFF;
+	}
+	sector++;
+	if(sector > 013) {
+		sector = 0;
+		surface++;
+		if(surface > 1) {
+			surface = 0;
+			cylinder++;
+			if(cylinder > 0312)
+				rkerror(RKOVR);
+		}
+	}
+	if(RKWC)
+	    setTimeout(function () {
+		rkrwsec('+t+');
+	    }, 3);
+	else {
+		rkready();
+		if(RKCS & (1<<6)) interrupt(INTRK, 5);
+	}
+}
+
+function
+rkgo()
+{
+	switch((RKCS & 017) >> 1) {
+	case 0: rkreset(); break;
+	case 1: rknotready(); setTimeout(function () {
+	    rkrwsec(true)
+	}, 3); break;
+	case 2: rknotready(); setTimeout(function () {
+	    rkrwsec(false)
+	}, 3); break;
+	default: panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
+	}
+}
+
+function
+rkwrite16(a,v)
+{
+	switch(a) {
+	case 0777400: break;
+	case 0777402: break;
+	case 0777404:
+		RKBA = (RKBA & 0xFFFF) | ((v & 060) << 12);
+		v &= 017517; // writable bits
+		RKCS &= ~017517;
+		RKCS |= v & ~1; // don't set GO bit
+		if(v & 1) rkgo();
+		break;
+	case 0777406: RKWC = v; break;
+	case 0777410: RKBA = (RKBA & 0x30000) | v; break;
+	case 0777412:
+		drive = v >> 13;
+		cylinder = (v >> 5) & 0377;
+		surface = (v >> 4) & 1;
+		sector = v & 15;
+		break;
+	default:
+		panic("invalid write");
+	}
+}
+
+function
+rkreset()
+{
+	RKDS = (1 << 11) | (1 << 7) | (1 << 6);
+	RKER = 0;
+	RKCS = 1 << 7;
+	RKWC = 0;
+	RKBA = 0;
+	RKDB = 0;
+}
+
+function
+rkinit()
+{
+    var req, buf, i;
+    req = new XMLHttpRequest();
+    //req.open('GET', 'http://pdp11.aiju.de/rk0', false);
+    req.open('GET', 'rk0', false);
+    req.overrideMimeType('text/plain; charset=x-user-defined');
+    req.send(null);
+    if(req.status != 200) panic("could not load disk image");
+    buf = req.responseText;
+    if(buf.length != imglen) panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
+    rkdisk = new Array(buf.length);
+    for(i=0;i<buf.length;i++) {
+	rkdisk[i] = buf.charCodeAt(i) & 0xFF;
+    }
+}
+
+
+
+
+
+// ******************************* END: rk05.js *******************************
+
+
+
+
+
+
+
+
 var FLAGN = 8;
 var FLAGZ = 4;
 var FLAGV = 2;
@@ -324,13 +744,13 @@ function
 printstate()
 {
 	writedebug(
-		"R0 " + ostr(R[0],6) + " " + 
-		"R1 " + ostr(R[1],6) + " " + 
-		"R2 " + ostr(R[2],6) + " " + 
-		"R3 " + ostr(R[3],6) + " " + 
-		"R4 " + ostr(R[4],6) + " " + 
-		"R5 " + ostr(R[5],6) + " " + 
-		"R6 " + ostr(R[6],6) + " " + 
+		"R0 " + ostr(R[0],6) + " " +
+		"R1 " + ostr(R[1],6) + " " +
+		"R2 " + ostr(R[2],6) + " " +
+		"R3 " + ostr(R[3],6) + " " +
+		"R4 " + ostr(R[4],6) + " " +
+		"R5 " + ostr(R[5],6) + " " +
+		"R6 " + ostr(R[6],6) + " " +
 		"R7 " + ostr(R[7],6)
 	+ "\n[");
 	if(prevuser) writedebug("u"); else writedebug("k");
@@ -1023,12 +1443,19 @@ nsteps(n)
 }
 
 function
-run() 
+run()
 {
 	if(tim1 == undefined)
-		tim1 = setInterval('nsteps(4000);', 1);
+	    tim1 = setInterval(function () {
+		return nsteps(4000);
+	    }, 1);
 	if(tim2 == undefined)
-		tim2 = setInterval('document.getElementById("ips").innerHTML = ips; ips = 0;', 1000);
+	    tim2 = setInterval(function () {
+		document.getElementById("ips").innerHTML = ips;
+		return ips = 0;
+	    }, 1000);
+
+    console.log("made it here.");
 }
 
 function
@@ -1039,3 +1466,14 @@ stop()
 	clearInterval(tim2);
 	tim1 = tim2 = undefined;
 }
+
+
+
+exports.reset = reset;
+exports.rkinit = rkinit;
+exports.run = run;
+exports.reset = reset;
+exports.stop = stop;
+
+exports.addchar = addchar;
+exports.specialchar = specialchar;

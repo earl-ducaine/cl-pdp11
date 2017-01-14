@@ -4,7 +4,7 @@
 	<head>
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 		<title>PDP-11 emulator</title>
-		<link rel="stylesheet" href="http://phicode.de/phi.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		<!-- <link rel="stylesheet" href="http://phicode.de/phi.css" type="text/css" media="screen" title="no title" charset="utf-8"> -->
 		<style>
 		#terminal {
 			font-family: monospace;
@@ -17,19 +17,30 @@
 			height: 5cm;
 		}
 		</style>
-		<script src="disasm.js" type="text/javascript"></script>
-		<script src="cons.js" type="text/javascript"></script>
-		<script src="rk05.js" type="text/javascript"></script>
-		<script src="pdp11.js" type="text/javascript"></script>
+		<!-- <script src="disasm.js" type="text/javascript"></script> -->
+		<!-- <script src="cons.js" type="text/javascript"></script> -->
+		<!-- <script src="rk05.js" type="text/javascript"></script> -->
+		  <!-- <script src="pdp11.js" type="text/javascript"></script> -->
+
+
+
+		  <script src="bundle.js"></script>
+		  <script>
+		    pdp11 = require('pdp11');
+		  </script>
 	</head>
-	<body onload="reset(); rkinit()">
+	<body onload="pdp11.reset();pdp11.rkinit()">
 		<input type="button" value="reset" onclick="reset()" />
-		<input type="button" value="run" onclick="run()" />
+		<input type="button" value="run" onclick="pdp11.run()" />
 		<input type="button" value="stop" onclick="stop()" />
 		<span id="ips"> </span>
 		<span id="rkbusy" style='display: none'>hard disk busy</span>
 		<div>press run, type <tt>unix</tt> at the <tt>@</tt> prompt to load the kernel, enjoy! <a href="http://aiju.de/code/pdp11/faq">faq</a></div>
-		<textarea id="terminal" readonly="readonly" onkeypress="addchar(event.which)" onkeyup="specialchar(event.which)"> </textarea>
+		<textarea id="terminal"
+			  readonly="readonly"
+			  onkeypress="pdp11.addchar(event.which)"
+			  onkeyup="pdp11.specialchar(event.which)">
+		</textarea>
 		<textarea id="debug" readonly="readonly"> </textarea>
 	</body>
 </html>
