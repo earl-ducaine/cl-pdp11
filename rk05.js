@@ -1,5 +1,3 @@
-var pdp11 = require('pdp11');
-
 var RKDS, RKER, RKCS, RKWC, RKBA, drive, sector, surface, cylinder, rkimg;
 
 var imglen = 2077696;
@@ -22,7 +20,7 @@ rkread16(a)
 	case 0777410: return RKBA & 0xFFFF;
 	case 0777412: return (sector) | (surface << 4) | (cylinder << 5) | (drive << 13);
 	}
-	pdp11.panic("invalid read");
+	panic("invalid read");
 }
 
 function
@@ -43,7 +41,7 @@ rkready()
 
 function
 rkerror(code)
-{
+{	
 	var msg;
 	rkready();
 	RKER |= code;
@@ -54,7 +52,7 @@ rkerror(code)
 	case RKNXC: msg = "invalid cylinder accessed"; break;
 	case RKNXS: msg = "invalid sector accessed"; break;
 	}
-	pdp11.panic(msg);
+	panic(msg);
 }
 
 function
@@ -104,7 +102,7 @@ rkgo()
 	case 0: rkreset(); break;
 	case 1: rknotready(); setTimeout('rkrwsec(true)', 3); break;
 	case 2: rknotready(); setTimeout('rkrwsec(false)', 3); break;
-	default: pdp11.panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
+	default: panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
 	}
 }
 
@@ -130,7 +128,7 @@ rkwrite16(a,v)
 		sector = v & 15;
 		break;
 	default:
-		pdp11.panic("invalid write");
+		panic("invalid write");
 	}
 }
 
@@ -145,74 +143,19 @@ rkreset()
 	RKDB = 0;
 }
 
-
-function rkinit() {
-    var req, buf, i;
-    req = new XMLHttpRequest();
-    req.open('GET', 'rk0', false);
-    req.overrideMimeType('text/plain; charset=x-user-defined');
-    req.send(null);
-    if(req.status != 200) {
-	pdp11.panic("could not load disk image");
-    }
-    buf = req.responseText;
-    if(buf.length != imglen) {
-	pdp11.panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
-    }
-    rkdisk = new Array(buf.length);
-    for(i=0;i<buf.length;i++) {
-	rkdisk[i] = buf.charCodeAt(i) & 0xFF;
-    }
-}
-
-function rkinit_alt() {
-    var req, buf, i;
-    fs = require('fs')
-    fs.readFile('./rk0', 'binary', function (err, buf) {
-	if(buf.length != imglen) {
-	    console.log("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
-	}
+function
+rkinit()
+{
+	var req, buf, i;
+	req = new XMLHttpRequest();
+	req.open('GET', 'http://pdp11.aiju.de/rk0', false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	if(req.status != 200) panic("could not load disk image");
+	buf = req.responseText;
+	if(buf.length != imglen) panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
 	rkdisk = new Array(buf.length);
 	for(i=0;i<buf.length;i++) {
-	    rkdisk[i] = buf.charCodeAt(i) & 0xFF;
+		rkdisk[i] = buf.charCodeAt(i) & 0xFF;
 	}
-	console.log("Initialization complete.");
-    });
 }
-
-
-module.exports = {
-    rkinit: function() {
-	return rkinit();
-    },
-    rkrwsec: function() {
-	return rkrwsec();
-    },
-    rkread16: function() {
-	return rkread16();
-    },
-    rkreset: function() {
-	return rkreset();
-    },
-    rkwrite16: function(a,v) {
-	return rkwrite16(a,v);
-    }
-};
-
-// run_alt();
-// function
-// rkinit_bak()
-// {
-// 	var req, buf, i;
-// 	req = new XMLHttpRequest();
-// 	req.open('GET', 'http://pdp11.aiju.de/rk0', false);
-// 	req.overrideMimeType('text/plain; charset=x-user-defined');
-// 	req.send(null);
-// 	if(req.status != 200) panic("could not load disk image");
-// 	buf = req.responseText;
-// 	if(buf.length != imglen) panic("file too short, got " + buf.length.toString() + ", expected " + imglen.toString());
-// 	rkdisk = new Array(buf.length);
-// 	for(i=0;i<buf.length;i++) {
-// 		rkdisk[i] = buf.charCodeAt(i) & 0xFF;
-// 	}
-// }
