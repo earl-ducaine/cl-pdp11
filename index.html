@@ -23,8 +23,8 @@
 		    pdp11 = require('pdp11');
 		  </script>
 	</head>
-	<body onload="pdp11.reset();pdp11.rkinit()">
-		<input type="button" value="reset" onclick="reset()" />
+	<body onload="pdp11.reset(true);pdp11.rkinit(true)">
+		<input type="button" value="reset" onclick="reset(true)" />
 		<input type="button" value="run" onclick="pdp11.run()" />
 		<input type="button" value="stop" onclick="stop()" />
 		<span id="ips"> </span>

@@ -129,29 +129,50 @@ disasm(a)
 
 var TKS, TPS, keybuf = 0;
 
-function
-clearterminal()
-{
-	var len = document.getElementById("terminal").firstChild.nodeValue.length;
-	document.getElementById("terminal").firstChild.deleteData(0, len);
-	TKS = 0;
-	TPS = 1<<7;
+
+function browser_clearterminal() {
+    var len = document.getElementById("terminal").firstChild.nodeValue.length;
+    document.getElementById("terminal").firstChild.deleteData(0, len);
+    TKS = 0;
+    TPS = 1<<7;
 }
 
-function
-writeterminal(msg)
-{
+function node_clearterminal() {
+    console_noop("browser_clearterminal");
+}
+
+function clearterminal() {
+    if (exports.browser_mode) {
+	browser_clearterminal();
+    } else {
+	node_clearterminal();
+    }
+    TKS = 0;
+    TPS = 1<<7;
+}
+
+function browser_writeterminal(msg) {
 	var ta = document.getElementById("terminal");
 	ta.firstChild.appendData(msg);
 	ta.scrollTop = ta.scrollHeight;
 }
 
-function
-addchar(c)
-{
-	TKS |= 0x80;
-	keybuf = c;
-	if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
+function node_writeterminal(msg) {
+    process.stdout.write(msg + "\n");
+}
+
+function writeterminal(msg) {
+    if (exports.browser_mode) {
+	browser_writeterminal();
+    } else {
+	node_writeterminal();
+    }
+}
+
+function addchar(c) {
+    TKS |= 0x80;
+    keybuf = c;
+    if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
 }
 
 function
@@ -261,20 +282,16 @@ rkread16(a)
 	panic("invalid read");
 }
 
-function
-rknotready()
-{
-	document.getElementById('rkbusy').style.display = '';
-	RKDS &= ~(1<<6);
-	RKCS &= ~(1<<7);
+function rknotready() {
+    document.getElementById('rkbusy').style.display = '';
+    RKDS &= ~(1<<6);
+    RKCS &= ~(1<<7);
 }
 
-function
-rkready()
-{
-	document.getElementById('rkbusy').style.display = 'none';
-	RKDS |= 1<<6;
-	RKCS |= 1<<7;
+function rkready() {
+    document.getElementById('rkbusy').style.display = 'none';
+    RKDS |= 1<<6;
+    RKCS |= 1<<7;
 }
 
 function
@@ -721,9 +738,7 @@ ostr(z,n)
 	return val;
 }
 
-function
-cleardebug()
-{
+function browser_cleardebug() {
 	var len = document.getElementById("debug").firstChild.nodeValue.length;
 	document.getElementById("debug").firstChild.deleteData(0, len);
 }
@@ -1386,30 +1401,42 @@ step()
 	throw Trap(INTINVAL, "invalid instruction");
 }
 
-function
-reset()
-{
-	var i;
-	for(i=0;i<7;i++) R[i] = 0;
-	PS = 0;
-	KSP = 0;
-	USP = 0;
-	curuser = false;
-	prevuser = false;
-	SR0 = 0;
-	curPC = 0;
-	instr = 0;
-	ips = 0;
-	LKS = 1<<7;
-	for(i=0;i<memory.length;i++) memory[i] = 0;
-	for(i=0;i<bootrom.length;i++) memory[01000+i] = bootrom[i];
-	for(i=0;i<16;i++) pages[i] = createpage(0, 0);
-	R[7] = 02002;
-	cleardebug();
-	clearterminal();
-	rkreset();
-	clkcounter = 0;
-	waiting = false;
+function console_noop(noop_funct) {
+    console.warn(noop_funct + ": doesn't perform any actions yet.")
+}
+
+
+function node_cleardebug () {
+    console_noop("node_cleardebug");
+}
+
+function reset(browser_mode) {
+    exports.reset = browser_mode;
+    var i;
+    for(i=0;i<7;i++) R[i] = 0;
+    PS = 0;
+    KSP = 0;
+    USP = 0;
+    curuser = false;
+    prevuser = false;
+    SR0 = 0;
+    curPC = 0;
+    instr = 0;
+    ips = 0;
+    LKS = 1<<7;
+    for(i=0;i<memory.length;i++) memory[i] = 0;
+    for(i=0;i<bootrom.length;i++) memory[01000+i] = bootrom[i];
+    for(i=0;i<16;i++) pages[i] = createpage(0, 0);
+    R[7] = 02002;
+    if (exports.browser_mode) {
+	browser_cleardebug();
+    } else {
+	node_cleardebug();
+    }
+    clearterminal();
+    rkreset();
+    clkcounter = 0;
+    waiting = false;
 }
 
 function
@@ -1468,7 +1495,6 @@ stop()
 exports.reset = reset;
 exports.rkinit = rkinit;
 exports.run = run;
-exports.reset = reset;
 exports.stop = stop;
 
 exports.addchar = addchar;
