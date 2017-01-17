@@ -60,64 +60,60 @@ var disasmtable = [
 	[0177777, 0000004, "IOT", "", false]
 ];
 
-function
-disasmaddr(m,a)
-{
-	if((m & 7) == 7) {
-		switch(m) {
-		case 027: a[0]+=2;return "$" + memory[a[0]>>1].toString(8);
-		case 037: a[0]+=2;return "*" + memory[a[0]>>1].toString(8);
-		case 067: a[0]+=2;return "*" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
-		case 077: a[0]+=2;return "**" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
-		}
+function disasmaddr(m,a) {
+    if((m & 7) == 7) {
+	switch(m) {
+	case 027: a[0]+=2;return "$" + memory[a[0]>>1].toString(8);
+	case 037: a[0]+=2;return "*" + memory[a[0]>>1].toString(8);
+	case 067: a[0]+=2;return "*" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
+	case 077: a[0]+=2;return "**" + ((a[0] + 2 + memory[a[0]>>1]) & 0xFFFF).toString(8);
 	}
-	r = rs[m & 7];
-	switch(m & 070) {
-	case 000: return r;
-	case 010: return "(" + r + ")";
-	case 020: return "(" + r + ")+";
-	case 030: return "*(" + r + ")+";
-	case 040: return "-(" + r + ")";
-	case 050: return "*-(" + r + ")";
-	case 060: a[0]+=2;return memory[a[0]>>1].toString(8) + "(" + r + ")";
-	case 070: a[0]+=2;return "*" + memory[a[0]>>1].toString(8) + "(" + r + ")";
-	}
+    }
+    r = rs[m & 7];
+    switch(m & 070) {
+    case 000: return r;
+    case 010: return "(" + r + ")";
+    case 020: return "(" + r + ")+";
+    case 030: return "*(" + r + ")+";
+    case 040: return "-(" + r + ")";
+    case 050: return "*-(" + r + ")";
+    case 060: a[0]+=2;return memory[a[0]>>1].toString(8) + "(" + r + ")";
+    case 070: a[0]+=2;return "*" + memory[a[0]>>1].toString(8) + "(" + r + ")";
+    }
 }
 
-function
-disasm(a)
-{
-	var i, ins, l, msg, s, d;
-	ins = memory[a>>1];
-	for(i=0;i<disasmtable.length;i++) {
-		l = disasmtable[i];
-		if((ins & l[0]) == l[1]) {
-			msg = l[2];
-			break;
-		}
+function disasm(a) {
+    var i, ins, l, msg, s, d;
+    ins = memory[a>>1];
+    for(i=0;i<disasmtable.length;i++) {
+	l = disasmtable[i];
+	if((ins & l[0]) == l[1]) {
+	    msg = l[2];
+	    break;
 	}
-	if(msg == undefined)
-		return "???";
-	if(l[4] && ins & 0100000) msg += "B";
-	s = (ins & 07700) >> 6;
-	d = ins & 077;
-	o = ins & 0377;
-	aa = [a];
-	switch(l[3]) {
-	case "SD": msg += " " + disasmaddr(s, aa) + ","; // fallthrough
-	case "D": msg += " " + disasmaddr(d, aa); break;
-	case "RO": msg += " " + rs[(ins & 0700) >> 6] + ","; o &= 077; // fallthrough
-	case "O":
-		if(o & 0x80) {
-			msg += " -" + (2*((0xFF ^ o) + 1)).toString(8);
-		} else {
-			msg += " +" + (2*o).toString(8);
-		} break;
-	case "RD": msg += " " + rs[(ins & 0700) >> 6] + ", " + disasmaddr(d, aa); break;
-	case "R": msg += " " + rs[ins & 7]; break;
-	case "R3": msg += " " + rs[(ins & 0700) >> 6]; break;
-	}
-	return msg;
+    }
+    if(msg == undefined)
+	return "???";
+    if(l[4] && ins & 0100000) msg += "B";
+    s = (ins & 07700) >> 6;
+    d = ins & 077;
+    o = ins & 0377;
+    aa = [a];
+    switch(l[3]) {
+    case "SD": msg += " " + disasmaddr(s, aa) + ","; // fallthrough
+    case "D": msg += " " + disasmaddr(d, aa); break;
+    case "RO": msg += " " + rs[(ins & 0700) >> 6] + ","; o &= 077; // fallthrough
+    case "O":
+	if(o & 0x80) {
+	    msg += " -" + (2*((0xFF ^ o) + 1)).toString(8);
+	} else {
+	    msg += " +" + (2*o).toString(8);
+	} break;
+    case "RD": msg += " " + rs[(ins & 0700) >> 6] + ", " + disasmaddr(d, aa); break;
+    case "R": msg += " " + rs[ins & 7]; break;
+    case "R3": msg += " " + rs[(ins & 0700) >> 6]; break;
+    }
+    return msg;
 }
 
 // ****************************** END: disasm.js ******************************
@@ -125,7 +121,6 @@ disasm(a)
 
 
 // ****************************** START: cons.js ******************************
-
 
 var TKS, TPS, keybuf = 0;
 
@@ -175,78 +170,70 @@ function addchar(c) {
     if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
 }
 
-function
-specialchar(c)
-{
-	switch(c) {
-	case 42: keybuf = 4; break;
-	case 19: keybuf = 034; break;
-	case 46: keybuf = 127; break;
-	default: return;
-	}
-	TKS |= 0x80;
-	if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
+function specialchar(c) {
+    switch(c) {
+    case 42: keybuf = 4; break;
+    case 19: keybuf = 034; break;
+    case 46: keybuf = 127; break;
+    default: return;
+    }
+    TKS |= 0x80;
+    if(TKS & (1<<6)) interrupt(INTTTYIN, 4);
 }
 
-function
-getchar()
-{
-	if(TKS & 0x80) {
-		TKS &= 0xff7e;
-		return keybuf;
-	}
-	return 0;
+function getchar() {
+    if(TKS & 0x80) {
+	TKS &= 0xff7e;
+	return keybuf;
+    }
+    return 0;
 }
 
-function
-consread16(a)
-{
-	switch(a) {
-	case 0777560: return TKS;
-	case 0777562: return getchar();
-	case 0777564: return TPS;
-	case 0777566: return 0;
-	}
-	panic("read from invalid address " + ostr(a,6));
+function consread16(a) {
+    switch(a) {
+    case 0777560: return TKS;
+    case 0777562: return getchar();
+    case 0777564: return TPS;
+    case 0777566: return 0;
+    }
+    panic("read from invalid address " + ostr(a,6));
 }
 
-function
-conswrite16(a,v)
-{
-	switch(a) {
-	case 0777560:
-		if(v & (1<<6))
-			TKS |= 1<<6;
-		else
-			TKS &= ~(1<<6);
-		break;
-	case 0777564:
-		if(v & (1<<6))
-			TPS |= 1<<6;
-		else
-			TPS &= ~(1<<6);
-		break;
-	case 0777566:
-		v &= 0xFF;
-		if(!(TPS & 0x80)) break;
-		switch(v) {
-		case 13: break;
-		default:
-			writeterminal(String.fromCharCode(v & 0x7F));
-		}
-		TPS &= 0xff7f;
-		if(TPS & (1<<6))
-		    setTimeout(function () {
-			TPS |= 0x80; interrupt(INTTTYOUT, 4);
-		    }, 1);
-		else
-		    setTimeout(function () {
-			TPS |= 0x80;
-		    }, 1);
-		break;
+function conswrite16(a,v) {
+    switch(a) {
+    case 0777560:
+	if(v & (1<<6))
+	    TKS |= 1<<6;
+	else
+	    TKS &= ~(1<<6);
+	break;
+    case 0777564:
+	if(v & (1<<6))
+	    TPS |= 1<<6;
+	else
+	    TPS &= ~(1<<6);
+	break;
+    case 0777566:
+	v &= 0xFF;
+	if(!(TPS & 0x80)) break;
+	switch(v) {
+	case 13: break;
 	default:
-		panic("write to invalid address " + ostr(a,6));
+	    writeterminal(String.fromCharCode(v & 0x7F));
 	}
+	TPS &= 0xff7f;
+	if(TPS & (1<<6))
+	    setTimeout(function () {
+		TPS |= 0x80; interrupt(INTTTYOUT, 4);
+	    }, 1);
+	else
+	    setTimeout(function () {
+		TPS |= 0x80;
+	    }, 1);
+	break;
+    default:
+	panic("write to invalid address " + ostr(a,6));
+    }
 }
 
 
@@ -255,7 +242,6 @@ conswrite16(a,v)
 
 
 // ****************************** START: rk05.js ******************************
-
 
 var RKDS, RKER, RKCS, RKWC, RKBA, drive, sector, surface, cylinder, rkimg;
 
@@ -268,9 +254,7 @@ var
     RKNXS = (1<<5)
    ;
 
-function
-rkread16(a)
-{
+function rkread16(a) {
 	switch(a) {
 	case 0777400: return RKDS;
 	case 0777402: return RKER;
@@ -282,89 +266,107 @@ rkread16(a)
 	panic("invalid read");
 }
 
-function rknotready() {
+function browser_rknotready() {
     document.getElementById('rkbusy').style.display = '';
+}
+
+function node_rknotready() {
+    console_noop("node_rknotready not implemented yet.");
+}
+
+function rknotready() {
+    if (exports.browser_mode) {
+	browser_rknotready();
+    } else {
+	node_rknotready();
+    }
     RKDS &= ~(1<<6);
     RKCS &= ~(1<<7);
 }
 
-function rkready() {
+function browser_rkready() {
     document.getElementById('rkbusy').style.display = 'none';
+}
+
+function node_rkready() {
+    console_noop("node_rkready not implemented yet.");
+}
+
+function rkready() {
+    if (exports.browser_mode) {
+	browser_rkready();
+    } else {
+	node_rkready();
+    }
     RKDS |= 1<<6;
     RKCS |= 1<<7;
 }
 
-function
-rkerror(code)
-{
-	var msg;
+function rkerror(code) {
+    var msg;
+    rkready();
+    RKER |= code;
+    RKCS |= (1<<15) | (1<<14);
+    switch(code) {
+    case RKOVR: msg = "operation overflowed the disk"; break;
+    case RKNXD: msg = "invalid disk accessed"; break;
+    case RKNXC: msg = "invalid cylinder accessed"; break;
+    case RKNXS: msg = "invalid sector accessed"; break;
+    }
+    panic(msg);
+}
+
+function rkrwsec(t) {
+    var pos;
+    if(drive != 0) rkerror(RKNXD);
+    if(cylinder > 0312) rkerror(RKNXC);
+    if(sector > 013) rkerror(RKNXS);
+    pos = (cylinder * 24 + surface * 12 + sector) * 512;
+    for(i=0;i<256 && RKWC;i++) {
+	if(t) {
+	    var val;
+	    val = memory[RKBA >> 1];
+	    rkdisk[pos] = val & 0xFF;
+	    rkdisk[pos+1] = (val >> 8) & 0xFF;
+	}
+	else
+	    memory[RKBA >> 1] = rkdisk[pos] | (rkdisk[pos+1] << 8);
+	RKBA += 2;
+	pos += 2;
+	RKWC = (RKWC + 1) & 0xFFFF;
+    }
+    sector++;
+    if(sector > 013) {
+	sector = 0;
+	surface++;
+	if(surface > 1) {
+	    surface = 0;
+	    cylinder++;
+	    if(cylinder > 0312)
+		rkerror(RKOVR);
+	}
+    }
+    if(RKWC)
+	setTimeout(function () {
+	    rkrwsec('+t+');
+	}, 3);
+    else {
 	rkready();
-	RKER |= code;
-	RKCS |= (1<<15) | (1<<14);
-	switch(code) {
-	case RKOVR: msg = "operation overflowed the disk"; break;
-	case RKNXD: msg = "invalid disk accessed"; break;
-	case RKNXC: msg = "invalid cylinder accessed"; break;
-	case RKNXS: msg = "invalid sector accessed"; break;
-	}
-	panic(msg);
+	if(RKCS & (1<<6)) interrupt(INTRK, 5);
+    }
 }
 
-function
-rkrwsec(t)
-{
-	var pos;
-	if(drive != 0) rkerror(RKNXD);
-	if(cylinder > 0312) rkerror(RKNXC);
-	if(sector > 013) rkerror(RKNXS);
-	pos = (cylinder * 24 + surface * 12 + sector) * 512;
-	for(i=0;i<256 && RKWC;i++) {
-		if(t) {
-			var val;
-			val = memory[RKBA >> 1];
-			rkdisk[pos] = val & 0xFF;
-			rkdisk[pos+1] = (val >> 8) & 0xFF;
-		}
-		else
-			memory[RKBA >> 1] = rkdisk[pos] | (rkdisk[pos+1] << 8);
-		RKBA += 2;
-		pos += 2;
-		RKWC = (RKWC + 1) & 0xFFFF;
-	}
-	sector++;
-	if(sector > 013) {
-		sector = 0;
-		surface++;
-		if(surface > 1) {
-			surface = 0;
-			cylinder++;
-			if(cylinder > 0312)
-				rkerror(RKOVR);
-		}
-	}
-	if(RKWC)
-	    setTimeout(function () {
-		rkrwsec('+t+');
-	    }, 3);
-	else {
-		rkready();
-		if(RKCS & (1<<6)) interrupt(INTRK, 5);
-	}
-}
-
-function
-rkgo()
-{
-	switch((RKCS & 017) >> 1) {
-	case 0: rkreset(); break;
-	case 1: rknotready(); setTimeout(function () {
-	    rkrwsec(true)
-	}, 3); break;
-	case 2: rknotready(); setTimeout(function () {
-	    rkrwsec(false)
-	}, 3); break;
-	default: panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
-	}
+function rkgo() {
+    switch((RKCS & 017) >> 1) {
+    case 0: rkreset(); break;
+    case 1: rknotready(); setTimeout(function () {
+	rkrwsec(true)
+    }, 3); break;
+    case 2: rknotready(); setTimeout(function () {
+	rkrwsec(false)
+    }, 3); break;
+    default: panic("unimplemented RK05 operation " + ((RKCS & 017) >> 1).toString());
+    }
 }
 
 function
@@ -1405,7 +1407,6 @@ function console_noop(noop_funct) {
     console.warn(noop_funct + ": doesn't perform any actions yet.")
 }
 
-
 function node_cleardebug () {
     console_noop("node_cleardebug");
 }
@@ -1465,9 +1466,7 @@ nsteps(n)
 	}
 }
 
-function
-run()
-{
+function run() {
 	if(tim1 == undefined)
 	    tim1 = setInterval(function () {
 		return nsteps(4000);
@@ -1481,9 +1480,7 @@ run()
     console.log("made it here.");
 }
 
-function
-stop()
-{
+function stop() {
 	document.getElementById("ips").innerHTML = '';
 	clearInterval(tim1);
 	clearInterval(tim2);
@@ -1496,6 +1493,5 @@ exports.reset = reset;
 exports.rkinit = rkinit;
 exports.run = run;
 exports.stop = stop;
-
 exports.addchar = addchar;
 exports.specialchar = specialchar;
